@@ -1,0 +1,22 @@
+.art-text-control .btn {
+    border-radius: 5px !important;
+    background: #dd2c00 !important;
+}
+
+
+.add-text-controls header .btn {
+    border-radius: 5px;
+    background: none;
+    border: 2px solid #dd2c00;
+    color: #dd2c00;
+    font-weight: bold;
+}
+
+.add-text-controls header {
+    background: #e8eaf6 none repeat scroll 0 0;
+    color: #dd2c00 !important;
+}
+
+.add-text-controls header h3 {
+    font-weight: 800
+}

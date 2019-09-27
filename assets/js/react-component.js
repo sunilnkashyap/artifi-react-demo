@@ -2,6 +2,35 @@
 
 var reactDemo = {
     canvas: null,
+    defaultLocal: {
+        lblTitle: 'Add/Edit Text',
+        defaultTxtCaption: 'Text',
+        defaultTxtPlaceholder: 'Enter Text',
+        btnAdd: 'Add Text',
+        msgTxtNotAvailable: 'Plaese click \'Add Text\' for text editing options.',
+        msgTextLineError: 'Text lines exceeds number of allowed lines',
+        msgTextCharLimitError: 'You have exceeded the maximum character limit. Please reduce the number of characters to update text.',
+        msgInvalidChar: 'Invalid Character entered',
+        lblFontFamily: 'Font Family',
+        defaultBold: 'Bold',
+        defaultItalic: 'Italic',
+        defaultHorizontalAlign: 'Horizontal Align',
+        defaultHorizontalLeftAlign: 'Left Align',
+        defaultHorizontalCenterAlign: 'Center Align',
+        defaultHorizontalRightAlign: 'Right Align',
+        defaultVerticalAlign: 'Vertical Align',
+        defaultVerticalTopAlign: 'Top Align',
+        defaultVerticalMiddleAlign: 'Middle Align',
+        defaultVerticalBottomAlign: 'Bottom Align',
+        defaultColor: 'Color',
+        defaultStroke: 'Stroke',
+        defaultStrokeColor: 'Stroke Color',
+        defaultFontFamily: 'Font Family',
+        defaultFontSize: 'Font Size',
+        defaultEffects: 'Effects',
+        defaultDelete: 'Delete',
+        defaultOpacityInfoMessage: 'Setting opactiy to 1 will make your image as solid as it was applied first. Further, it will be treated as No Opacity applied.'
+    },
     
     init: function() {
         this.canvas = new fabric.Canvas('artifiCanvas');
@@ -11,13 +40,16 @@ var reactDemo = {
         this.storeSubscribe();
 
         this.initFabricEvents();
+
+        this.initCustomizationEvents();
     },
     textComponent: {
         _this: null,
+        obj: null,
         textComponentContainer: '',
         init: function() {
         
-            ReactDOM.render(React.createElement(window.Artifi.TextComponent.TextComponent), document.getElementById(this.textComponentContainer));
+            this.obj = ReactDOM.render(React.createElement(window.Artifi.TextComponent.TextWrapper), document.getElementById(this.textComponentContainer));
             
             var textInitData = {
                 config: {
@@ -57,6 +89,9 @@ var reactDemo = {
             var _this = this._this;
             var activeObject = _this.canvas.getActiveObject();
             switch(data.type){
+                case 'underline':
+                    activeObject.set('underline', data.value);
+                    break;                  
                 case "fontSize":
                     activeObject.set('fontSize',data.value);
                     break;
@@ -113,7 +148,7 @@ var reactDemo = {
         },
         selectWidgetFromCanvas: function(id){
             if(window._Artifi.Store.getState().textComponent.selctedWidget != id){
-                window._Artifi.Store.dispatch({ type: window.Artifi.TextComponent.TextActions.SELECT_TEXT_WIDGET, payload: id });
+                window._Artifi.Store.dispatch({ type: window.Artifi.TextComponent.TextActions.SELECT_TEXT_WIDGET_BY_ID, payload: id });
             }            
         }
     },
@@ -130,10 +165,15 @@ var reactDemo = {
                 case Artifi.TextComponent.TextActions.EFFECT_UPDATE: 
                     _this.textComponent.updateWidget(lastAction.payload);
                     break;
+                case Artifi.TextComponent.TextActions.DELETE_WIDGET: 
+                    _this.canvas.remove(_this.canvas.getActiveObject());
+                    _this.canvas.discardActiveObject().renderAll()
+
+                    break;
                 case Artifi.TextComponent.TextActions.UPDATE_WIDGET: 
                     _this.textComponent.updateWidget(lastAction.payload);
                     break;
-                case Artifi.TextComponent.TextActions.SELECT_TEXT_WIDGET: 
+                case Artifi.TextComponent.TextActions.SELECT_TEXT_WIDGET_BY_ID: 
                     _this.textComponent.selectWidget(lastAction.payload);
                     break;
                 default:
@@ -147,7 +187,7 @@ var reactDemo = {
     initFabricEvents: function() {
         var _this = this;
         this.canvas.on('selection:cleared', function (options) {
-            if(options.deselected[0].get('type') == 'text'){
+            if(options && options.deselected && options.deselected[0].get('type') == 'text'){
                 _this.textComponent.removeSelection();
             }
        });
@@ -163,5 +203,48 @@ var reactDemo = {
                 _this.textComponent.selectWidgetFromCanvas(_this.canvas.getActiveObject().id);
             }
         })
+    },
+
+    initCustomizationEvents: function(){
+        var _this = this;
+        $("#toggleCSS").change(function(){
+            if (!$("link[href='assets/css/demo.css']").length){
+              $('head').append('<link rel="stylesheet" type="text/css" href="assets/css/demo.css">');
+            } else {
+              $("link[href='assets/css/demo.css']")[0].remove();
+            }
+          });
+  
+          $("#toggleHTML").change(function(){
+            if (_this.textComponent.obj.state.layoutName == 'artifi'){
+                _this.textComponent.obj.changeLayout('sunil')
+            } else {
+                _this.textComponent.obj.changeLayout('artifi')
+            }
+          });
+  
+          $("#toggleLOCAL").change(function(){
+            changedLocal = { ..._this.defaultLocal };
+            if($(this).is(':checked')){
+              console.log('sample')
+              changedLocal.lblTitle = 'Add new text widget';
+              changedLocal.defaultTxtCaption = "Enter Text";
+              changedLocal.btnAdd = "Add New Text Widget";
+              changedLocal.defaultFontFamily = "Select Font Family";
+              changedLocal.defaultFontSize = "Select Font Size";
+              changedLocal.msgTxtNotAvailable = "Oops... There isn't any text widget... Click to add text button to add new widget.";
+  
+            }
+            
+          var textInitData = {
+            config: {
+              debug: true,
+              allowAdd: true
+            },
+            localization:changedLocal
+          }
+          
+          window._Artifi.Store.dispatch({ type: Artifi.TextComponent.TextActions.INIT, payload: textInitData });
+          });
     }
 }
